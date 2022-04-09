@@ -11,6 +11,15 @@ Importing library:
 </dependency>
 ```
 
+## 0.2
+
+`NameTransformer.<type>.transform(from)` transforms name cases from camel case. Example:
+
+```java
+var output = NameTransformer.SNAKE.transform("iActuallyNeedSnakeCase");
+```
+`output` will be `"i_actually_need_snake_case"`
+
 ## 0.1
 
 `Exceptions.unckeched(...)` to wrap checked exceptions into unchecked ones. Example:
