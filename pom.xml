@@ -7,6 +7,9 @@
   <artifactId>jx</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
+  <name>jx</name>
+  <description>Java extensions</description>
+  <url>https://github.com/raffaeleragni/jx</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>17</maven.compiler.source>
