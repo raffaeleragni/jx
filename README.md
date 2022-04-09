@@ -11,7 +11,19 @@ Importing library:
 </dependency>
 ```
 
-## 0.3
+## Jdbc
+
+`Jdbc` helper class for taking advantage of the utils explained below. Examples:
+
+```java
+public record Rec(int id, Instant timestamp, String value) {}
+
+var mapper = Jdbc.recordMapperOf(Rec.class);
+var result = new LinkedList<Rec>();
+jdbc.streamed("select * from table", st -> {}, rs -> result.add(mapper.map(rs)));
+```
+
+## Records
 
 `Records` helper class. Examples:
 
@@ -22,7 +34,7 @@ var map = Map.of("a", 1, "b", "x");
 var record = Records.fromMap(MyRecord.class, map);
 ```
 
-## 0.2
+## General
 
 `NameTransformer.<type>.transform(from)` transforms name cases from camel case. Example:
 
@@ -31,7 +43,6 @@ var output = NameTransformer.SNAKE.transform("iActuallyNeedSnakeCase");
 ```
 `output` will be `"i_actually_need_snake_case"`
 
-## 0.1
 
 `Exceptions.unckeched(...)` to wrap checked exceptions into unchecked ones. Example:
 
