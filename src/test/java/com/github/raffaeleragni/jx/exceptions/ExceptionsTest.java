@@ -28,27 +28,27 @@ import org.junit.jupiter.api.Test;
 class ExceptionsTest {
   @Test
   void testNoException_ThrowsNothing_AllSignatures() {
-    assertDoesNotThrow(() -> 
+    assertDoesNotThrow(() ->
       unchecked(() -> {}, RuntimeException::new)
     );
-    assertDoesNotThrow(() -> 
+    assertDoesNotThrow(() ->
       unchecked(() -> 1, RuntimeException::new)
     );
-    assertDoesNotThrow(() -> 
+    assertDoesNotThrow(() ->
       unchecked(() -> {})
     );
-    assertDoesNotThrow(() -> 
+    assertDoesNotThrow(() ->
       unchecked(() -> 1)
     );
   }
-  
+
   @Test
   void testCheckedException_IsThrown_AsProvidedException() {
     Wrapper w = () -> {throw new IOException();};
     var result = assertThrows(RuntimeException.class, () ->
       unchecked(w, IllegalStateException::new)
     );
-    
+
     assertThat(result.getClass(), is(IllegalStateException.class));
     assertThat(result.getCause().getClass(), is(IOException.class));
   }
@@ -61,5 +61,21 @@ class ExceptionsTest {
 
     assertThat(result.getClass(), is(RuntimeException.class));
     assertThat(result.getCause().getClass(), is(SocketException.class));
+  }
+
+  @Test
+  void testRuntimeExceptions_AreNotWrapped() {
+    var result = assertThrows(IllegalArgumentException.class, () ->
+      unchecked(() -> {throw new IllegalArgumentException();})
+    );
+
+    assertThat(result.getClass(), is(IllegalArgumentException.class));
+
+    Wrapper w = () -> {throw new IllegalArgumentException();};
+    result = assertThrows(IllegalArgumentException.class, () ->
+      unchecked(w)
+    );
+
+    assertThat(result.getClass(), is(IllegalArgumentException.class));
   }
 }

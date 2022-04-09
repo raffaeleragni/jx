@@ -21,11 +21,11 @@ public final class Exceptions {
 
   private Exceptions() {}
   private static final Function<Throwable, ? extends RuntimeException> DEFAULT_EXCEPTION_TRANSFORMER = RuntimeException::new;
-  
+
   public static void unchecked(Wrapper wrapper) {
     unchecked(wrapper, DEFAULT_EXCEPTION_TRANSFORMER);
   }
-  
+
   public static <T> T unchecked(WrapperR<T> wrapper) {
     return unchecked(wrapper, DEFAULT_EXCEPTION_TRANSFORMER);
   }
@@ -33,6 +33,8 @@ public final class Exceptions {
   public static void unchecked(Wrapper w, Function<Throwable, ? extends RuntimeException> s) {
     try {
       w.run();
+    } catch (RuntimeException ex) {
+      throw ex;
     } catch (Exception ex) {
       throw s.apply(ex);
     }
@@ -41,6 +43,8 @@ public final class Exceptions {
   public static <T> T unchecked(WrapperR<T> w, Function<Throwable, ? extends RuntimeException> s) {
     try {
       return w.run();
+    } catch (RuntimeException ex) {
+      throw ex;
     } catch (Exception ex) {
       throw s.apply(ex);
     }
