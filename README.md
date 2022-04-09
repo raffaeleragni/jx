@@ -7,8 +7,19 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.2</version>
+  <version>0.3</version>
 </dependency>
+```
+
+## 0.3
+
+`Records` helper class. Examples:
+
+```java
+record MyRecord(int a, String b);
+
+var map = Map.of("a", 1, "b", "x");
+var record = Records.fromMap(MyRecord.class, map);
 ```
 
 ## 0.2
