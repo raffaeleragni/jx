@@ -42,7 +42,9 @@ jobs:
           echo ${{ secrets.SONATYPE_GPG_PASSPHRASE }} | gpg --batch --yes --passphrase-fd 0 --import ~/.gnupg/private.key
       - name: Setup TAG
         if: startsWith(github.ref, 'refs/tags/')
-        run: mvn -B versions:set -DnewVersion=${{ github.ref }}
+        env:
+          GITHUB_REF: ${{ github.ref }}
+        run: mvn -B versions:set -DnewVersion=${GITHUB_REF##*/}
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
