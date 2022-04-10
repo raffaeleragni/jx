@@ -7,7 +7,7 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.5</version>
+  <version>0.6</version>
 </dependency>
 ```
 
@@ -21,6 +21,8 @@ public record Rec(int id, Instant timestamp, String value) {}
 var mapper = Jdbc.recordMapperOf(Rec.class);
 var result = new LinkedList<Rec>();
 jdbc.streamed("select * from table", st -> {}, rs -> result.add(mapper.map(rs)));
+
+var result = jdbc.streamRecords(Table.class, "select * from test where name = ?", "test1").toList();
 ```
 
 ## Records
