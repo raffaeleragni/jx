@@ -111,6 +111,13 @@ class JdbcTest {
   }
 
   @Test
+  void testSimplerMethodForStreaming() {
+    var result = jdbc.streamRecords(Table.class, "select * from test where name = ?", "test1").toList();
+    assertThat(result.size(), is(1));
+    assertThat(result, hasItem(new Table("test1")));
+  }
+
+  @Test
   void testExecuteStatement() {
     var rows = jdbc.execute("update test set name = 'test'", st -> {});
     var set = new HashSet<String>();

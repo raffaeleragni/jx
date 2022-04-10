@@ -20,10 +20,12 @@ import com.github.raffaeleragni.jx.records.Records;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class Jdbc {
 
@@ -70,8 +72,22 @@ public class Jdbc {
     );
   }
 
+  public <T extends Record> Stream<T> streamRecords(Class<T> clazz, String sql, Object... params) {
+    var builder = Stream.<T>builder();
+    var mapper = recordMapperOf(clazz);
+    streamed(sql, st -> setStatementParams(st, params), rs -> builder.add(mapper.map(rs)));
+
+    return builder.build();
+  }
+
   public static <T extends Record> RecordMapper<T> recordMapperOf(Class<T> clazz) {
     return new RecordMapperImpl<>(clazz);
+  }
+
+  private void setStatementParams(PreparedStatement st, Object[] params) throws SQLException {
+    int i = 1;
+    for (Object param: params)
+      st.setObject(i++, param);
   }
 
   private void streamResultSetResultsOnCallback(PreparedStatement st, ExConsumer<ResultSet> consumer) {
