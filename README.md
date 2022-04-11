@@ -7,8 +7,28 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.6</version>
+  <version>0.7</version>
 </dependency>
+```
+
+## Injection
+
+Simple injection via constructor. Example:
+
+```java
+interface Service {}
+class ServiceImpl implements Service {}
+class ServiceManager {
+  Service service;
+  ServiceManager(Service service) {
+    this.service = service;
+  }
+}
+...
+
+var injection = new Injection()
+injection.addImplementation(Service.class, ServiceImpl.class)
+var manager = injection.createNew(ServiceManager.class);
 ```
 
 ## Jdbc
