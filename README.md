@@ -58,6 +58,17 @@ var record = Records.fromMap(MyRecord.class, map);
 
 ## General
 
+`ClassMap` a simple hash map that handles class types as keys.
+
+```java
+var map = new ClassMap();
+map.put(Integer.class, 1);
+map.put("2");
+
+map.get(Integer.class) --> 1
+map.get(String.class) --> "1"
+```
+
 `NameTransformer.<type>.transform(from)` transforms name cases from camel case. Example:
 
 ```java
