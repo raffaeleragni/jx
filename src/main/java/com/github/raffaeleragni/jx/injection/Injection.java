@@ -15,6 +15,7 @@
  */
 package com.github.raffaeleragni.jx.injection;
 
+import com.github.raffaeleragni.jx.collections.ClassMap;
 import static com.github.raffaeleragni.jx.exceptions.Exceptions.unchecked;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -25,11 +26,11 @@ public class Injection {
   public static class AtLeastOneConstructorNecessary extends RuntimeException {}
   public static class OnlyOneConstructorAllowed extends RuntimeException {}
 
-  private final Map<String, Object> instances = new HashMap<>();
+  private final ClassMap instances = new ClassMap();
   private final Map<Class, Class> implementations = new HashMap<>();  // NOSONAR
 
-  public <T> void addInstance(Class<T> clazz, Object object) {
-    instances.put(clazz.getTypeName(), object);
+  public <T> void addInstance(Class<T> clazz, T object) {
+    instances.put(clazz, object);
   }
 
   public <I, T extends I> void addImplementation(Class<I> interf, Class<T> clazz) {
@@ -70,9 +71,8 @@ public class Injection {
   }
 
   private <T> T lookupValueOrType(Class<T> type) {
-    var typeName = type.getTypeName();
-    if (instances.containsKey(typeName))
-      return (T) instances.get(typeName);
+    if (instances.containsKey(type))
+      return (T) instances.get(type);
     if (implementations.containsKey(type))
       return (T) createNew(implementations.get(type));
     return createNew(type);
