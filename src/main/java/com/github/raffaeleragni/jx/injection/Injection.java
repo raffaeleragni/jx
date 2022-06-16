@@ -72,7 +72,7 @@ public class Injection {
 
   private <T> T lookupValueOrType(Class<T> type) {
     if (instances.containsKey(type))
-      return (T) instances.get(type);
+      return instances.get(type);
     if (implementations.containsKey(type))
       return (T) createNew(implementations.get(type));
     return createNew(type);
