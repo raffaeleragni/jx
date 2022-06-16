@@ -49,10 +49,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_GPG_PRIVATEKEY: ${{ secrets.SONATYPE_GPG_PRIVATEKEY }}
           SONATYPE_GPG_PASSPHRASE: ${{ secrets.SONATYPE_GPG_PASSPHRASE }}
         run: |
           export MAVEN_OPTS=-Dmaven.artifact.threads=100
-          mvn -s .mvn/settings.xml -Prelease deploy org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=raffaeleragni_jx -Dsonar.organization=raffaeleragni -Dsonar.host.url=https://sonarcloud.io
+          mvn -s .mvn/settings.xml -Prelease deploy org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=raffaeleragni -Dsonar.host.url=https://sonarcloud.io
