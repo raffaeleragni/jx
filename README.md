@@ -11,6 +11,38 @@ Importing library:
 </dependency>
 ```
 
+## JSON
+
+### `JSONReader`
+
+Based on a reader interface, it will parse a JSON into an object, array or hashmap. Optionally there is also a shortcut for using the `Records` of JX.
+As it is based on a reader interface, it can read streams of data.
+
+```java
+record TestRecord(int id, String value) {}
+var s = """ {"id": 1, "value": "val"} """;
+var rec = new JSONReader(new StringReader(s)).toRecord(TestRecord.class);
+// Shorthands for strings are also available
+var rec = JSONReader.toRecord(TestRecord.class, s);
+```
+
+### `JSONBuilder`
+
+Based on a `StringBuilder`, will output a JSON. As it is based on `StringBuilder` it will use minimal overhead. Can serialize records directly using the `Records` of JX.
+
+```java
+record TestRecord(int id, String value) {}
+var rec = new TestRecord(1, "val");
+var s = JSONBuilder.toJSON(rec);
+```
+
+output of `s`:
+
+```json
+{"id":1,"value":"val"}
+```
+
+
 ## Injection
 
 Simple injection via constructor. Example:
