@@ -92,6 +92,10 @@ var record = Records.fromMap(MyRecord.class, map);
 
 ## General
 
+The following ones are mostly required internally, but they are also publicly available.
+
+#### `ClassMap`
+
 `ClassMap` a simple hash map that handles class types as keys.
 
 ```java
@@ -110,6 +114,7 @@ var output = NameTransformer.SNAKE.transform("iActuallyNeedSnakeCase");
 ```
 `output` will be `"i_actually_need_snake_case"`
 
+#### `Exceptions`
 
 `Exceptions.unckeched(...)` to wrap checked exceptions into unchecked ones. Example:
 
