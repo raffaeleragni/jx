@@ -45,7 +45,7 @@ output of `s`:
 ```
 
 
-## Injection
+## `Injection`
 
 Simple injection via constructor. Example:
 
@@ -60,12 +60,12 @@ class ServiceManager {
 }
 ...
 
-var injection = new Injection()
-injection.addImplementation(Service.class, ServiceImpl.class)
+var injection = new Injection();
+injection.addImplementation(Service.class, ServiceImpl.class);
 var manager = injection.createNew(ServiceManager.class);
 ```
 
-## Jdbc
+## `Jdbc`
 
 `Jdbc` helper class for taking advantage of the utils explained below. Examples:
 
@@ -79,7 +79,7 @@ jdbc.streamed("select * from table", st -> {}, rs -> result.add(mapper.map(rs)))
 var result = jdbc.streamRecords(Table.class, "select * from test where name = ?", "test1").toList();
 ```
 
-## Records
+## `Records`
 
 `Records` helper class. Examples:
 
