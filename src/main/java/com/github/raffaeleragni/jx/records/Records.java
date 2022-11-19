@@ -121,11 +121,13 @@ public final class Records {
     return unchecked(() -> field.getAccessor().invoke(rec));
   }
 
-  private static IllegalArgumentException recordRequiredException() {
-    return new IllegalArgumentException("A java Record is required.");
-  }
-
   private static RecordComponent[] getDeclaredFields(Class<?> clazz) {
     return clazz.getRecordComponents();
+  }
+
+  public static class RecordRequired extends RuntimeException {}
+
+  private static RuntimeException recordRequiredException() {
+    return new RecordRequired();
   }
 }

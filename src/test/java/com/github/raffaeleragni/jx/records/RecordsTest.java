@@ -37,7 +37,7 @@ class RecordsTest {
   @Test
   void testToMap_WithSomethingThatIsNotAMap_ThrowsException() {
     var o = new Object();
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(Records.RecordRequired.class, () -> {
       Records.toMap(o);
     });
   }
@@ -66,7 +66,7 @@ class RecordsTest {
   @Test
   void testFromMap_WithSomethingThatIsNotARecord() {
     var map = new HashMap<String, Object>();
-    assertThrows(IllegalArgumentException.class, () -> fromMap(Object.class, map));
+    assertThrows(Records.RecordRequired.class, () -> fromMap(Object.class, map));
   }
 
   @Test
