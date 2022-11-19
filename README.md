@@ -9,8 +9,19 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.10</version>
+  <version>0.11</version>
 </dependency>
+```
+
+## `FSKV`
+
+A basic key-value storage for saving into files. Uses internal JX JSON implementation.
+
+```java
+public record Rec(String uuid, String name) {}
+var store = new FSKV<>(Path.of(System.getProperty("java.io.tmpdir"), "storetest"), TestRecordForFSKV.class);
+var rec = new Rec(UUID.randomUUID().toString(), "test");
+store.put(rec.uuid(), rec);
 ```
 
 ## JSON
