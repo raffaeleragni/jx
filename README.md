@@ -9,7 +9,7 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.11</version>
+  <version>0.12</version>
 </dependency>
 ```
 
