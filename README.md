@@ -13,6 +13,24 @@ Importing library:
 </dependency>
 ```
 
+## HTTP `Server`
+
+A minimal http server using the internal JDK implemenation. Only HTTP 1.1 and no encryption supported.
+
+```java
+var server = new Server(8080);
+server.map("/", ctx -> "hello world");
+server.map("/echo", Context::request);
+
+// Or using more of the features
+record Rec(String id, String value) {}
+var store = new FSKV<Rec>(Path.of("..."), Rec.class);
+server.map("/", ctx -> {
+  var rec = JSONReader.toRecord(Rec.class, ctx.request());
+  store.put(rec.id(), rec);
+});
+```
+
 ## `FSKV`
 
 A basic key-value storage for saving into files. Uses internal JX JSON implementation.
