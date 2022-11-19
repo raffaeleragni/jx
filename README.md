@@ -7,7 +7,7 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.8</version>
+  <version>0.10</version>
 </dependency>
 ```
 
