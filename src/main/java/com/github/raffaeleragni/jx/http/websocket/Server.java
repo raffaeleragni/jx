@@ -114,6 +114,7 @@ class SessionHandler implements Closeable, Runnable {
   final MessageDigest sha1;
   final Map<String, Server.BufferPipe> bufferPipes;
   boolean upgraded = false;
+  String key = null;
   Optional<Server.BufferPipe> selectedPipe;
 
   public SessionHandler(Socket socket, Map<String, Server.BufferPipe> bufferPipes) {
@@ -151,6 +152,7 @@ class SessionHandler implements Closeable, Runnable {
         findKey(request).ifPresent(key -> {
           handshakeRespond(key);
           upgraded = true;
+          this.key = key;
           this.selectedPipe = Optional.of(bufferPipes.get(path));
         })
       );
