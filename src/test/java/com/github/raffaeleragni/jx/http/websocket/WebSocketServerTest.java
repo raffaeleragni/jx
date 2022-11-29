@@ -91,6 +91,15 @@ class WebSocketServerTest {
     });
   }
 
+  @Test
+  void testConnectWithSocketOccupied() throws Exception {
+    try (var sock = new Socket("localhost", 9999)) {
+      // connect still within occupied sockets
+      connectProperly();
+      assertThat(opened, is(true));
+    }
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {
     "HEAD / HTTP/1.1",
