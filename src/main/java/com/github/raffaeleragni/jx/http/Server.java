@@ -55,12 +55,13 @@ public class Server {
     instance.stop(0);
   }
 
-  public void map(String path, Function<Server.Context, String> fn) {
+  public Server map(String path, Function<Server.Context, String> fn) {
     map(path, c -> {
       var resp = fn.apply(c);
       if (validResponse(resp))
         c.response(resp);
     });
+    return this;
   }
 
   private boolean validResponse(String resp) {
