@@ -114,10 +114,12 @@ class SessionHandler implements Closeable, Runnable {
   final MessageDigest sha1;
   final Map<String, Server.BufferPipe> bufferPipes;
   boolean upgraded = false;
+  Optional<Server.BufferPipe> selectedPipe;
 
   public SessionHandler(Socket socket, Map<String, Server.BufferPipe> bufferPipes) {
     this.socket = socket;
     this.bufferPipes = bufferPipes;
+    this.selectedPipe = Optional.empty();
     input = unchecked(socket::getInputStream);
     output = unchecked(socket::getOutputStream);
     sha1 = unchecked(() -> MessageDigest.getInstance("SHA-1")); //NOSONAR SHA-1 is required for WebSocket even if outdated
@@ -145,17 +147,21 @@ class SessionHandler implements Closeable, Runnable {
   private void upgrade() {
     try (var scanner = new Scanner(new NonCloseableInputStream(input), UTF_8)) {
       var request = scanner.useDelimiter("\\r\\n\\r\\n").next();
-      if (!findGET(request))
-        return;
-      findKey(request).ifPresent(key -> {
-        handshakeRespond(key);
-        upgraded = true;
-      });
+      findPathOfGET(request).ifPresent(path ->
+        findKey(request).ifPresent(key -> {
+          handshakeRespond(key);
+          upgraded = true;
+          this.selectedPipe = Optional.of(bufferPipes.get(path));
+        })
+      );
     }
   }
 
-  private static boolean findGET(String request) {
-    return Pattern.compile("^GET").matcher(request).find();
+  private static Optional<String> findPathOfGET(String request) {
+    var pattern = Pattern.compile("^GET (.*) (.*)").matcher(request);
+    if (!pattern.find())
+      return Optional.empty();
+    return Optional.of(pattern.group(1));
   }
 
   private Optional<String> findKey(String request) {
