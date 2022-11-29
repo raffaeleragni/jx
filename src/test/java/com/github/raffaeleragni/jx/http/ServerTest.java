@@ -85,21 +85,22 @@ class ServerTest {
   }
 
   @Test
-  void testPaths() throws Exception {
-    server.map("/path", c -> {
-      assertThat(c.method(), is("GET"));
-      assertThat(c.mappedPath(), is("/path"));
-      assertThat(c.extraPath(), is("extra"));
-      return "";
-    });
+  void testChainedPaths() throws Exception {
+    server
+      .map("/path", c -> {
+        assertThat(c.method(), is("GET"));
+        assertThat(c.mappedPath(), is("/path"));
+        assertThat(c.extraPath(), is("extra"));
+        return "";
+      })
+      .map("/path2", c -> {
+        assertThat(c.method(), is("GET"));
+        assertThat(c.mappedPath(), is("/path2"));
+        assertThat(c.extraPath(), is("extra/paths"));
+        return "";
+      });
     assertThat(get("/path/extra"), is(""));
 
-    server.map("/path2", c -> {
-      assertThat(c.method(), is("GET"));
-      assertThat(c.mappedPath(), is("/path2"));
-      assertThat(c.extraPath(), is("extra/paths"));
-      return "";
-    });
     assertThat(get("/path2/extra/paths/"), is(""));
   }
 

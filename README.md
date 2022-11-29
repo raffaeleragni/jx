@@ -9,8 +9,17 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.11</version>
+  <version>0.13</version>
 </dependency>
+```
+
+## HTTP `Client`
+
+A shortcut for the internal JDK HttpClient.
+```java
+var client = new Client();
+var resp1 = client.getString("http://localhost:8080/");
+var resp2 = client.postString("http://localhost:8080/", "{}");
 ```
 
 ## HTTP `Server`
