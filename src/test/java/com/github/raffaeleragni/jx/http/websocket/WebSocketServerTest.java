@@ -24,6 +24,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.net.http.WebSocket;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import static org.hamcrest.CoreMatchers.is;
@@ -45,7 +46,7 @@ class WebSocketServerTest {
 
   @BeforeEach
   void setup() {
-    server = new Server(9999, in -> in);
+    server = new Server(9999, Map.of("/", in -> in));
   }
 
   @AfterEach
