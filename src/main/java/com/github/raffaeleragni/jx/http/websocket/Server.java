@@ -141,9 +141,9 @@ class SessionHandler implements Closeable, Runnable {
   }
 
   private boolean stillNeedsToUpgrade() {
-    if (socket.isClosed())
+    if (upgraded)
       return false;
-    return !upgraded;
+    return !socket.isClosed();
   }
 
   private void upgrade() {
