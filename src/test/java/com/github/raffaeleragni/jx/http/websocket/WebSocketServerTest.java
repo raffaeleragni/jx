@@ -15,34 +15,97 @@
  */
 package com.github.raffaeleragni.jx.http.websocket;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.net.http.WebSocket;
+import java.time.Duration;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class WebSocketServerTest {
   Server server;
-  WebSocket ws;
   boolean opened;
   String lastReceivedText;
   Throwable error;
 
   @BeforeEach
   void setup() {
-    server = new Server(9999);
-    ws = connectClient();
+    server = new Server(9999, in -> in);
+  }
+
+  @AfterEach
+  void teardown() throws IOException {
+    server.close();
   }
 
   @Test
-  void testMethod() {
+  void testWrongRequestToConnect() throws Exception {
+    connectWrongly();
+    assertThat(opened, is(false));
+  }
+
+  @Test
+  void testConnect() {
+    connectProperly();
     assertThat(opened, is(true));
   }
 
-  private WebSocket connectClient() {
+  @Test
+  void testConnectTwice() {
+    connectProperly();
+    assertThat(opened, is(true));
+
+    opened = false;
+
+    connectProperly();
+    assertThat(opened, is(true));
+  }
+
+  @Test
+  void testClosesBeforeConnecting() throws IOException {
+    server.close();
+    assertThrows(CompletionException.class, () -> connectProperly());
+  }
+
+  @Test
+  void testWrongConnection() throws Exception {
+    try (var sock = new Socket("localhost", 9999)) {
+      try (var out = sock.getOutputStream()) {
+        out.write("HTTP blah\r\n\r\n".getBytes("UTF-8"));
+        out.flush();
+      }
+    }
+    server.close();
+
+    assertThrows(CompletionException.class, () -> connectProperly());
+  }
+
+  private void connectWrongly() {
+    var req = HttpRequest
+      .newBuilder(URI.create("http://localhost:9999/"))
+      .timeout(Duration.ofMillis(10))
+      .POST(HttpRequest.BodyPublishers.ofString("{}"))
+      .build();
+    assertThrows(HttpTimeoutException.class, () ->
+      HttpClient.newBuilder()
+        .connectTimeout(Duration.ofMillis(10))
+        .build()
+        .send(req, HttpResponse.BodyHandlers.ofString()).body()
+    );
+  }
+
+  private WebSocket connectProperly() {
     return HttpClient.newHttpClient().newWebSocketBuilder().buildAsync(URI.create("ws://localhost:9999/"), new WebSocket.Listener() {
       StringBuilder builder = new StringBuilder();
 

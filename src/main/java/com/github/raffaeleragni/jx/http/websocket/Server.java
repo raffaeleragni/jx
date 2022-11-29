@@ -23,9 +23,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.security.MessageDigest;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -36,42 +39,61 @@ import java.util.regex.Pattern;
  * WebSocket server.
  * This only implements web sockets, HTTP is excluded.
  * The only HTTP code present is for the handshake.
+ * The first implementation will ignore paths and only use a single port for
+ * a whole socket communication, more or less as a normal socket does.
+ * This makes this class kind of a glorified socket that knows how to upgrade
+ * itself from a WebSocket handshake.
  *
  * @author Raffaele Ragni
  */
 public class Server implements Closeable {
 
-  final ServerSocket serverSocket;
-  final ExecutorService executor;
-
-  public Server(int port) {
-    this(port, Executors.newCachedThreadPool());
+  @FunctionalInterface
+  public interface BufferPipe {
+    byte[] process(byte[] input);
   }
 
-  public Server(int port, ExecutorService executor) {
+  final ServerSocket serverSocket;
+  final ExecutorService executor;
+  final ExecutorService listenerExecutor;
+  final BufferPipe bufferPipe;
+  // Will use Socket object pointers for equals/hash
+  final Set<SessionHandler> handlers = new HashSet<>();
+
+  public Server(int port, BufferPipe bufferPipe) {
+    this(port, bufferPipe, Executors.newCachedThreadPool());
+  }
+
+  public Server(int port, BufferPipe bufferPipe, ExecutorService executor) {
     this.executor = executor;
+    this.bufferPipe = bufferPipe;
     serverSocket = unchecked(() -> new ServerSocket(port));
-    Executors.newSingleThreadExecutor().submit(this::keepAccepting);
+    listenerExecutor = Executors.newSingleThreadExecutor();
+    listenerExecutor.submit(this::keepAccepting);
   }
 
   private void keepAccepting() {
     while (!serverSocket.isClosed()) {
       try {
-        var s = serverSocket.accept();
-        executor.submit(() -> acceptedSocket(s));
-      }catch (IOException ex) {
+        acceptedSocket(serverSocket.accept());
+      } catch (IOException ex) {
         logError(ex);
       }
     }
   }
 
-  @Override
-  public void close() throws IOException {
-    serverSocket.close();
+  private void acceptedSocket(Socket socket) {
+    var handler = new SessionHandler(socket, bufferPipe);
+    handlers.add(handler);
+    executor.submit(handler);
   }
 
-  private void acceptedSocket(Socket socket) {
-    new SessionHandler(socket).run();
+  @Override
+  public void close() throws IOException {
+    try (listenerExecutor; serverSocket) {
+      for (var handler: handlers)
+        handler.close();
+    }
   }
 
   private void logError(Throwable ex) {
@@ -86,14 +108,16 @@ class SessionHandler implements Closeable, Runnable {
   final Socket socket;
   final InputStream input;
   final OutputStream output;
-  final MessageDigest SHA1;
+  final MessageDigest sha1;
+  final Server.BufferPipe bufferPipe;
   boolean upgraded = false;
 
-  public SessionHandler(Socket socket) {
+  public SessionHandler(Socket socket, Server.BufferPipe bufferPipe) {
     this.socket = socket;
-    input = unchecked(() -> socket.getInputStream());
-    output = unchecked(() -> socket.getOutputStream());
-    SHA1 = unchecked(() -> MessageDigest.getInstance("SHA-1"));
+    this.bufferPipe = bufferPipe;
+    input = unchecked(socket::getInputStream);
+    output = unchecked(socket::getOutputStream);
+    sha1 = unchecked(() -> MessageDigest.getInstance("SHA-1")); //NOSONAR SHA-1 is required for WebSocket even if outdated
   }
 
   @Override
@@ -109,14 +133,20 @@ class SessionHandler implements Closeable, Runnable {
   }
 
   private void waitAndUpgradeToWebSocket() {
-    while (!socket.isClosed() && !upgraded)
+    while (stillNeedsToUpgrade())
       upgrade();
     while (!socket.isClosed())
       handleSession();
   }
 
+  private boolean stillNeedsToUpgrade() {
+    if (socket.isClosed())
+      return false;
+    return !upgraded;
+  }
+
   private void upgrade() {
-    try (var scanner = new Scanner(new NonCloseableInputStream(input), "UTF-8")) {
+    try (var scanner = new Scanner(new NonCloseableInputStream(input), UTF_8)) {
       var request = scanner.useDelimiter("\\r\\n\\r\\n").next();
       if (!findGET(request))
         return;
@@ -132,8 +162,7 @@ class SessionHandler implements Closeable, Runnable {
   private String findKey(String request) {
     var pattern = Pattern.compile("Sec-WebSocket-Key: (.*)").matcher(request);
     pattern.find();
-    var key = pattern.group(1);
-    return key;
+    return pattern.group(1);
   }
 
   private void handshakeRespond(String key) {
@@ -141,22 +170,23 @@ class SessionHandler implements Closeable, Runnable {
       ( "HTTP/1.1 101 Switching Protocols\r\n"
       + "Connection: Upgrade\r\n"
       + "Upgrade: websocket\r\n"
-      + "Sec-WebSocket-Accept: %s\r\n".formatted(sha1base64(key + WEBSOCKET_UUID))
-      + "\r\n")
-      .getBytes("UTF-8")
+      + "Sec-WebSocket-Accept: %s".formatted(sha1base64(key + WEBSOCKET_UUID))
+      + "\r\n\r\n")
+      .getBytes(UTF_8)
     );
     unchecked(() -> output.write(response, 0, response.length));
   }
 
   private String sha1base64(String s) {
-    return unchecked(() -> Base64.getEncoder().encodeToString(SHA1.digest(s.getBytes("UTF-8"))));
+    return unchecked(() -> Base64.getEncoder().encodeToString(sha1.digest(s.getBytes(UTF_8))));
   }
 
   private void handleSession() {
+    // TODO
   }
 }
 
-class NonCloseableInputStream extends FilterInputStream {
+class NonCloseableInputStream extends FilterInputStream { //NOSONAR Used for close prevention
 
   NonCloseableInputStream(InputStream input) {
     super(input);
