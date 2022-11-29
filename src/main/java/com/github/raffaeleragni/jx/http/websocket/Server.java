@@ -27,6 +27,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -150,8 +151,10 @@ class SessionHandler implements Closeable, Runnable {
       var request = scanner.useDelimiter("\\r\\n\\r\\n").next();
       if (!findGET(request))
         return;
-      handshakeRespond(findKey(request));
-      upgraded = true;
+      findKey(request).ifPresent(key -> {
+        handshakeRespond(key);
+        upgraded = true;
+      });
     }
   }
 
@@ -159,10 +162,11 @@ class SessionHandler implements Closeable, Runnable {
     return Pattern.compile("^GET").matcher(request).find();
   }
 
-  private String findKey(String request) {
+  private Optional<String> findKey(String request) {
     var pattern = Pattern.compile("Sec-WebSocket-Key: (.*)").matcher(request);
-    pattern.find();
-    return pattern.group(1);
+    if (!pattern.find())
+      return Optional.empty();
+    return Optional.of(pattern.group(1));
   }
 
   private void handshakeRespond(String key) {

@@ -27,11 +27,15 @@ import java.time.Duration;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class WebSocketServerTest {
   Server server;
@@ -79,16 +83,57 @@ class WebSocketServerTest {
   }
 
   @Test
-  void testWrongConnection() throws Exception {
+  void testOnDanglingSocketServerIsStillUp() throws Exception {
+    assertDoesNotThrow(() -> {
+      try (var sock = new Socket("localhost", 9999)) {
+        // leave a closed socket behind
+      }
+    });
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "HEAD / HTTP/1.1",
+    "GET / HTTP/1.1",
+    ""
+  })
+  void testWrongConnectionsAndThenSuccess(String content) throws Exception {
+    assertZeroResponseWithString(content);
+  }
+
+  @Test
+  void testCorrectSendWithHeader() throws Exception {
+    assertNonZeroResponseWithString(
+    """
+    GET / HTTP/1.1
+    Sec-WebSocket-Key: test
+    """);
+  }
+
+  private void assertZeroResponseWithString(String content) throws Exception {
     try (var sock = new Socket("localhost", 9999)) {
       try (var out = sock.getOutputStream()) {
-        out.write("HTTP blah\r\n\r\n".getBytes("UTF-8"));
-        out.flush();
+        try (var in = sock.getInputStream()) {
+          out.write((content+"\r\n\r\n").getBytes("UTF-8"));
+          out.flush();
+          Thread.sleep(100);//NOSONAR
+          assertThat(in.available(), is(0));
+        }
       }
     }
-    server.close();
+  }
 
-    assertThrows(CompletionException.class, () -> connectProperly());
+  private void assertNonZeroResponseWithString(String content) throws Exception {
+    try (var sock = new Socket("localhost", 9999)) {
+      try (var out = sock.getOutputStream()) {
+        try (var in = sock.getInputStream()) {
+          out.write((content+"\r\n\r\n").getBytes("UTF-8"));
+          out.flush();
+          Thread.sleep(100);//NOSONAR
+          assertThat(in.available(), is(not(0)));
+        }
+      }
+    }
   }
 
   private void connectWrongly() {
