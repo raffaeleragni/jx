@@ -40,10 +40,22 @@ public class Server {
     this(port, Executors.newCachedThreadPool());
   }
 
+  public Server(String host, int port) {
+    this(host, port, Executors.newCachedThreadPool());
+  }
+
   public Server(int port, ExecutorService executor) {
+    this(new InetSocketAddress(port), executor);
+  }
+
+  public Server(String host, int port, ExecutorService executor) {
+    this(new InetSocketAddress(host, port), executor);
+  }
+
+  private Server(InetSocketAddress addr, ExecutorService executor) {
     instance = unchecked(() -> {
       var s = HttpServer.create();
-      s.bind(new InetSocketAddress(port), 0);
+      s.bind(addr, 50);
       s.setExecutor(executor);
       s.start();
       return s;

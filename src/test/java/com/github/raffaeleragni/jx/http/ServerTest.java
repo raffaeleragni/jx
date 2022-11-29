@@ -25,24 +25,25 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
-import java.util.Random;
 import java.util.function.Consumer;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ServerTest {
-  int port;
+  int port = 8080;
   Server server;
 
   @BeforeEach
   void setup() {
-    port = new Random(System.currentTimeMillis()).nextInt(50_000)+1024;
-    while (isPortOccupied(port))
-      port++;
-
     server = new Server(port);
+  }
+
+  @AfterEach
+  void teardown() {
+    server.terminate();
   }
 
   @Test
@@ -121,8 +122,27 @@ class ServerTest {
     post("/path", "body");
   }
 
+  @Test
+  void testCanBindToTwoHosts() throws Exception {
+    var server1 = new Server("127.0.0.1", 8888);
+    var server2 = new Server("127.0.0.2", 8888);
+    server1.map("/", ctx -> "server1");
+    server2.map("/", ctx -> "server2");
+
+    assertThat(isPortOccupied(8888), is(true));
+    assertThat(hostGet("127.0.0.1", 8888, "/"), is("server1"));
+    assertThat(hostGet("127.0.0.2", 8888, "/"), is("server2"));
+    server1.terminate();
+    server2.terminate();
+  }
+
   private String get(String path) throws IOException, URISyntaxException, InterruptedException {
     var req = HttpRequest.newBuilder(new URI("http://localhost:"+port+path)).GET().build();
+    return HttpClient.newHttpClient().send(req, ofString()).body();
+  }
+
+  private String hostGet(String host, int port, String path) throws IOException, URISyntaxException, InterruptedException {
+    var req = HttpRequest.newBuilder(new URI("http://"+host+":"+port+path)).GET().build();
     return HttpClient.newHttpClient().send(req, ofString()).body();
   }
 

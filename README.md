@@ -9,7 +9,7 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.13</version>
+  <version>0.14</version>
 </dependency>
 ```
 
@@ -28,6 +28,8 @@ A minimal http server using the internal JDK implemenation. Only HTTP 1.1 and no
 
 ```java
 var server = new Server(8080);
+// or bind only to localhost
+var server = new Server("localhost", 8080);
 server.map("/", ctx -> "hello world");
 server.map("/echo", Context::request);
 
