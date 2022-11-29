@@ -62,25 +62,25 @@ class WebSocketServerTest {
 
   @Test
   void testConnect() {
-    connectProperly();
+    connectProperly("/");
     assertThat(opened, is(true));
   }
 
   @Test
   void testConnectTwice() {
-    connectProperly();
+    connectProperly("/");
     assertThat(opened, is(true));
 
     opened = false;
 
-    connectProperly();
+    connectProperly("/");
     assertThat(opened, is(true));
   }
 
   @Test
   void testClosesBeforeConnecting() throws IOException {
     server.close();
-    assertThrows(CompletionException.class, () -> connectProperly());
+    assertThrows(CompletionException.class, () -> connectProperly("/"));
   }
 
   @Test
@@ -96,7 +96,7 @@ class WebSocketServerTest {
   void testConnectWithSocketOccupied() throws Exception {
     try (var sock = new Socket("localhost", 9999)) {
       // connect still within occupied sockets
-      connectProperly();
+      connectProperly("/");
       assertThat(opened, is(true));
     }
   }
@@ -160,8 +160,8 @@ class WebSocketServerTest {
     );
   }
 
-  private WebSocket connectProperly() {
-    return HttpClient.newHttpClient().newWebSocketBuilder().buildAsync(URI.create("ws://localhost:9999/"), new WebSocket.Listener() {
+  private WebSocket connectProperly(String path) {
+    return HttpClient.newHttpClient().newWebSocketBuilder().buildAsync(URI.create("ws://localhost:9999"+path), new WebSocket.Listener() {
       StringBuilder builder = new StringBuilder();
 
       @Override
