@@ -15,12 +15,38 @@
  */
 package com.github.raffaeleragni.jx.exceptions;
 
-import java.util.function.Function;
+import java.util.*;
+import java.util.function.*;
 
 public final class Exceptions {
 
   private Exceptions() {}
   private static final Function<Throwable, ? extends RuntimeException> DEFAULT_EXCEPTION_TRANSFORMER = RuntimeException::new;
+
+  public static void absorb(Wrapper w) {
+    absorb(w, e -> {});
+  }
+
+  public static <T> Optional<T> absorb(WrapperR<T> w) {
+    return absorb(w, e -> {});
+  }
+
+  public static void absorb(Wrapper w, Consumer<Throwable> exConsumer) {
+    try {
+      w.run();
+    } catch (Exception ex) {
+      exConsumer.accept(ex);
+    }
+  }
+
+  public static <T> Optional<T> absorb(WrapperR<T> w, Consumer<Throwable> exConsumer) {
+    try {
+      return Optional.of(w.run());
+    } catch (Exception ex) {
+      exConsumer.accept(ex);
+      return Optional.empty();
+    }
+  }
 
   public static void unchecked(Wrapper wrapper) {
     unchecked(wrapper, DEFAULT_EXCEPTION_TRANSFORMER);

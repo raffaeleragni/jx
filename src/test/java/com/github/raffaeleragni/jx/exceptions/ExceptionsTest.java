@@ -16,14 +16,24 @@
 package com.github.raffaeleragni.jx.exceptions;
 
 import com.github.raffaeleragni.jx.exceptions.Exceptions.Wrapper;
+import com.github.raffaeleragni.jx.exceptions.Exceptions.WrapperR;
+
 import static com.github.raffaeleragni.jx.exceptions.Exceptions.unchecked;
+
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.function.*;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.junit.jupiter.api.Test;
+
+import static com.github.raffaeleragni.jx.exceptions.Exceptions.absorb;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class ExceptionsTest {
   @Test
@@ -40,6 +50,34 @@ class ExceptionsTest {
     assertDoesNotThrow(() ->
       unchecked(() -> 1)
     );
+    assertDoesNotThrow(() ->
+      absorb(() -> {})
+    );
+    assertDoesNotThrow(() ->
+      absorb(() -> 1)
+    );
+  }
+
+  @Test
+  void testAbsorbsAllExceptions() {
+    var caller = (Wrapper) () -> {throw new RuntimeException();};
+    var wrapper = (WrapperR<Integer>) () -> {throw new RuntimeException();};
+    assertDoesNotThrow(() -> absorb(caller));
+    assertDoesNotThrow(() -> absorb(wrapper));
+  }
+
+  @Test
+  void testAbsorbWithCallback() {
+    var ex = new RuntimeException();
+    var call1 = mock(Consumer.class);
+    var call2 = mock(Consumer.class);
+    var caller = (Wrapper) () -> {throw ex;};
+    var wrapper = (WrapperR<Integer>) () -> {throw ex;};
+    assertDoesNotThrow(() -> absorb(caller, call1));
+    assertDoesNotThrow(() -> absorb(wrapper, call2));
+
+    verify(call1).accept(ex);
+    verify(call2).accept(ex);
   }
 
   @Test
