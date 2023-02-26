@@ -1,6 +1,13 @@
 # JX: Extending the JDK
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=raffaeleragni_jx&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=raffaeleragni_jx)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=raffaeleragni_jx&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=raffaeleragni_jx)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=raffaeleragni_jx&metric=bugs)](https://sonarcloud.io/summary/new_code?id=raffaeleragni_jx)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=raffaeleragni_jx&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=raffaeleragni_jx)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=raffaeleragni_jx&metric=coverage)](https://sonarcloud.io/summary/new_code?id=raffaeleragni_jx)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=raffaeleragni_jx&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=raffaeleragni_jx)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=raffaeleragni_jx&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=raffaeleragni_jx)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=raffaeleragni_jx&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=raffaeleragni_jx)
+
 
 Required: latest GA JDK version.
 
