@@ -16,6 +16,7 @@
 package com.github.raffaeleragni.jx.http;
 
 import static com.github.raffaeleragni.jx.exceptions.Exceptions.unchecked;
+
 import com.sun.net.httpserver.HttpExchange; // NOSONAR
 import com.sun.net.httpserver.HttpServer; // NOSONAR
 import java.io.BufferedReader;
@@ -24,7 +25,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.net.InetSocketAddress;
+import java.util.*;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -110,6 +114,8 @@ public class Server {
     String mappedPath();
     String extraPath();
     String request();
+    Map<String, List<String>> headers();
+    List<String> header(String key);
     void response(String response);
 
     public static final class Status extends RuntimeException {
@@ -167,6 +173,16 @@ class ServerContextImpl implements Server.Context {
   @Override
   public String extraPath() {
     return extraPath;
+  }
+
+  @Override
+  public Map<String, List<String>> headers() {
+    return exchange.getRequestHeaders();
+  }
+
+  @Override
+  public List<String> header(String key) {
+    return exchange.getRequestHeaders().get(key);
   }
 
   @Override

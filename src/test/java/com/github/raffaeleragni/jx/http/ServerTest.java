@@ -16,6 +16,7 @@
 package com.github.raffaeleragni.jx.http;
 
 import static com.github.raffaeleragni.jx.TestHelper.isPortOccupied;
+
 import com.github.raffaeleragni.jx.http.Server.Context;
 import com.github.raffaeleragni.jx.http.Server.Context.Status;
 import java.io.IOException;
@@ -24,13 +25,21 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
+import java.util.*;
+
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
+
 import java.util.function.Consumer;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static java.util.Collections.emptyList;
+import static org.hamcrest.CoreMatchers.hasItem;
 
 class ServerTest {
   int port = 8080;
@@ -123,6 +132,25 @@ class ServerTest {
   }
 
   @Test
+  void testCanSeeHeaders() throws Exception {
+    server.map("/", ctx -> {
+      assertThat(ctx.header("content-type"), hasItem("text/plain"));
+      var headers = ctx.headers();
+      assertThat(headers.get("header1"), hasItem("Value1-1"));
+      assertThat(headers.get("HEADER1"), hasItem("Value1-2"));
+      return "ResponseFromHeaderRoute";
+    });
+
+    var res = getWithHeaders("/", Map.of(
+      "Content-Type", List.of("text/plain"),
+      "Header1", List.of("Value1-1", "Value1-2"),
+      "Header2", List.of()
+    ));
+
+    assertThat(res, is("ResponseFromHeaderRoute"));
+  }
+
+  @Test
   void testCanBindToTwoHosts() throws Exception {
     var server1 = new Server("127.0.0.1", 8888);
     var server2 = new Server("127.0.0.2", 8888);
@@ -139,6 +167,14 @@ class ServerTest {
   private String get(String path) throws IOException, URISyntaxException, InterruptedException {
     var req = HttpRequest.newBuilder(new URI("http://localhost:"+port+path)).GET().build();
     return HttpClient.newHttpClient().send(req, ofString()).body();
+  }
+
+  private String getWithHeaders(String path, Map<String, List<String>> headers) throws IOException, URISyntaxException, InterruptedException {
+    var req = HttpRequest.newBuilder(new URI("http://localhost:"+port+path)).GET();
+    headers.entrySet().forEach(e -> e.getValue().stream().forEach(v ->
+      req.header(e.getKey(), v)
+    ));
+    return HttpClient.newHttpClient().send(req.build(), ofString()).body();
   }
 
   private String hostGet(String host, int port, String path) throws IOException, URISyntaxException, InterruptedException {
