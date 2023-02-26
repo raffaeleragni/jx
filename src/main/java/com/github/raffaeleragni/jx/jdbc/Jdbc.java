@@ -16,12 +16,13 @@
 package com.github.raffaeleragni.jx.jdbc;
 
 import static com.github.raffaeleragni.jx.exceptions.Exceptions.unchecked;
+
 import com.github.raffaeleragni.jx.records.Records;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -47,6 +48,31 @@ public class Jdbc {
 
   public boolean healthy() {
     return wrapConnectionR(c -> unchecked(() -> c.isValid(0)));
+  }
+
+  public <T> Optional<T> selectOneValue(Class<T> clazz, String sql, ExConsumer<PreparedStatement> paramSetter) {
+    Objects.requireNonNull(clazz);
+    Objects.requireNonNull(sql);
+    Objects.requireNonNull(paramSetter);
+
+    return wrapConnectionR(connection ->
+      wrapStreamedStatementR(connection, sql, paramSetter, st ->
+        unchecked(() -> selectSingleValueFromStatement(st, clazz))
+      )
+    );
+  }
+
+  public <T extends Record> Optional<T> selectOneRecord(Class<T> clazz, String sql, ExConsumer<PreparedStatement> paramSetter) {
+    Objects.requireNonNull(clazz);
+    Objects.requireNonNull(sql);
+    Objects.requireNonNull(paramSetter);
+    var mapper = recordMapperOf(clazz);
+
+    return wrapConnectionR(connection ->
+      wrapStreamedStatementR(connection, sql, paramSetter, st ->
+        unchecked(() -> selectSingleRecordFromStatement(st, mapper))
+      )
+    );
   }
 
   public int execute(String sql, ExConsumer<PreparedStatement> paramSetter) {
@@ -88,6 +114,26 @@ public class Jdbc {
     int i = 1;
     for (Object param: params)
       st.setObject(i++, param);
+  }
+
+  private <T> Optional<T> selectSingleValueFromStatement(PreparedStatement st, Class<T> clazz) throws SQLException {
+    return fetchSingleValueFromResultSet(st.executeQuery(), clazz);
+  }
+
+  private <T extends Record> Optional<T> selectSingleRecordFromStatement(PreparedStatement st, RecordMapper<T> mapper) throws SQLException {
+    return fetchSingleRecordFromResultSet(st.executeQuery(), mapper);
+  }
+
+  private <T> Optional<T> fetchSingleValueFromResultSet(ResultSet rs, Class<T> clazz) throws SQLException {
+    if (!rs.next())
+      return Optional.empty();
+    return Optional.of(clazz.cast(rs.getObject(1)));
+  }
+
+  private <T extends Record> Optional<T> fetchSingleRecordFromResultSet(ResultSet rs, RecordMapper<T> mapper) throws SQLException {
+    if (!rs.next())
+      return Optional.empty();
+    return Optional.of(mapper.map(rs));
   }
 
   private void streamResultSetResultsOnCallback(PreparedStatement st, ExConsumer<ResultSet> consumer) {

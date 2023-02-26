@@ -16,19 +16,25 @@
 package com.github.raffaeleragni.jx.jdbc;
 
 import com.github.raffaeleragni.jx.TestHelper;
+
 import static com.github.raffaeleragni.jx.TestHelper.sql;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.UUID;
+
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static java.util.Optional.empty;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -129,6 +135,24 @@ class JdbcTest {
     assertThat(rows, greaterThan(0));
     assertThat(set.size(), is(1));
     assertThat(set.contains("test"), is(true));
+  }
+
+  @Test
+  void testSelectOneRowRecord() {
+    var res = jdbc.selectOneRecord(Table.class, "select * from test order by name asc limit 1", st -> {});
+    assertThat(res.get().name, is("test1"));
+
+    var emptyRes = jdbc.selectOneRecord(Table.class, "select * from test where uuid = ''", st -> {});
+    assertThat(emptyRes, is(empty()));
+  }
+
+  @Test
+  void testSelectOneRowOneColumn() {
+    var res = jdbc.selectOneValue(String.class, "select name from test order by name asc limit 1", st -> {});
+    assertThat(res.get(), is("test1"));
+
+    var emptyRes = jdbc.selectOneValue(String.class, "select name from test where uuid = ''", st -> {});
+    assertThat(emptyRes, is(empty()));
   }
 
   private void createTables(Connection connection) {
