@@ -16,7 +16,7 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.15</version>
+  <version>0.16</version>
 </dependency>
 ```
 
