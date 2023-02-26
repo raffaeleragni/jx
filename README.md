@@ -16,8 +16,21 @@ Importing library:
 <dependency>
   <groupId>com.github.raffaeleragni</groupId>
   <artifactId>jx</artifactId>
-  <version>0.14</version>
+  <version>0.15</version>
 </dependency>
+```
+
+## Sync and network patterns
+
+Useful for condition blockers or for some testing, or to find the next available port.
+```java
+var port = Network.findAvailablePortFrom(3000);
+// port will be the first non-occupied port available after and including 3000
+```
+
+```java
+Sync.waitForNotNull(SINGLETON::getSlowInitState);
+Sync.waitForNot(() -> Network.isPortAvailable(3000));
 ```
 
 ## HTTP `Client`
