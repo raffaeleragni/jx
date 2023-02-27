@@ -15,11 +15,20 @@
  */
 package com.github.raffaeleragni.jx.http;
 
+import com.github.raffaeleragni.jx.http.Server.Context.Status;
+import java.net.*;
+import java.util.*;
+import java.util.function.*;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static java.util.function.Function.identity;
+import static org.hamcrest.CoreMatchers.hasItem;
 
 class ClientTest {
   Client client;
@@ -37,11 +46,50 @@ class ClientTest {
   }
 
   @Test
-  void testGET() {
+  void testGET() throws Exception {
     server.map("/", ctx -> "OK");
     server.map("/path", ctx -> "path");
     assertThat(client.getString("http://localhost:8080/"), is("OK"));
     assertThat(client.getString("http://localhost:8080/path"), is("path"));
+    assertThat(client.getString(new URI("http://localhost:8080/")), is("OK"));
+    assertThat(client.getString(new URI("http://localhost:8080/path")), is("path"));
+  }
+
+  @Test
+  void testReturnCodes() throws Exception {
+    server.map("/", (Consumer) ctx -> {throw new Status(401);});
+
+    assertThat(client.get("http://localhost:8080/").status(), is(401));
+    assertThat(client.get(new URI("http://localhost:8080/")).status(), is(401));
+  }
+
+  @Test
+  void testConverter() throws Exception {
+    server.map("/", ctx -> "1");
+
+    assertThat(client.get("http://localhost:8080/", Integer::valueOf).body(), is(1));
+    assertThat(client.get(new URI("http://localhost:8080/"), Integer::valueOf).body(), is(1));
+  }
+
+  @Test
+  void testtestHeadersGET() throws Exception {
+    server.map("/", ctx -> {
+      assertThat(ctx.header("content-type"), hasItem("text/plain"));
+      assertThat(ctx.header("header1"), hasItem("Value1-1"));
+      assertThat(ctx.header("HEADER1"), hasItem("Value1-2"));
+      return "1";
+    });
+
+    var headers = Map.of(
+      "Content-Type", List.of("text/plain"),
+      "Header1", List.of("Value1-1", "Value1-2"),
+      "Header2", List.<String>of()
+    );
+
+    assertThat(client.get("http://localhost:8080/", headers).body(), is("1"));
+    assertThat(client.get("http://localhost:8080/", headers, identity()).body(), is("1"));
+    assertThat(client.get(new URI("http://localhost:8080/"), headers).body(), is("1"));
+    assertThat(client.get(new URI("http://localhost:8080/"), headers, identity()).body(), is("1"));
   }
 
   @Test
